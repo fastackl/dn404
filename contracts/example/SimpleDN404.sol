@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 import "../DN404.sol";
 import "../DN404Mirror.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {LibString} from "solady/utils/LibString.sol";
-import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+import {Ownable} from "node_modules/solady/src/auth/Ownable.sol";
+import {LibString} from "node_modules/solady/src/utils/LibString.sol";
+import {SafeTransferLib} from "node_modules/solady/src/utils/SafeTransferLib.sol";
 
 /**
  * @title SimpleDN404
@@ -22,15 +22,16 @@ contract SimpleDN404 is DN404, Ownable {
         string memory name_,
         string memory symbol_,
         uint96 initialTokenSupply,
-        address initialSupplyOwner
+        uint8 decimals,
+        address initialSupplyOwner,
+        address mirror
     ) {
         _initializeOwner(msg.sender);
 
         _name = name_;
         _symbol = symbol_;
 
-        address mirror = address(new DN404Mirror(msg.sender));
-        _initializeDN404(initialTokenSupply, initialSupplyOwner, mirror);
+        _initializeDN404(initialTokenSupply*10**decimals, initialSupplyOwner, mirror);
     }
 
     function name() public view override returns (string memory) {
