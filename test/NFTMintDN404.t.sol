@@ -37,6 +37,12 @@ contract NFTMintDN404Test is SoladyTest {
         payable(alice).transfer(10 ether);
     }
 
+    function logOwnedIds(uint[] memory ownedIds) internal pure {
+        for (uint i = 0; i < ownedIds.length; i++) {
+            console2.log("dn.ownedIds[%s]: %s", i, ownedIds[i]);
+        }
+    }
+
     function testMint() public {
         vm.startPrank(bob);
 
@@ -48,10 +54,13 @@ contract NFTMintDN404Test is SoladyTest {
 
         NFTMintDN404.AddressData memory bobData;
         uint nftSupply;
+        uint[] memory bobOwnedIds;
         bobData = dn.addressData(bob);
+        bobOwnedIds = dn.ownedIds(bob, 0, bobData.ownedLength);
         nftSupply = dn.totalNFTSupply();
-        console2.log("Bob's ownedLength:", bobData.ownedLength);
-        console2.log("Total NFT supply:", nftSupply);
+        console2.log("bobData.ownedLength:", bobData.ownedLength);
+        logOwnedIds(bobOwnedIds);
+        console2.log("dn.totalNFTSupply(): %s", nftSupply);
         console2.log("");
 
         console2.log("Bob sets skip NFT to true");
@@ -62,9 +71,11 @@ contract NFTMintDN404Test is SoladyTest {
         dn.transfer(alice, 9 * _WAD);
 
         bobData = dn.addressData(bob);
+        bobOwnedIds = dn.ownedIds(bob, 0, bobData.ownedLength);
         nftSupply = dn.totalNFTSupply();
-        console2.log("Bob's ownedLength: %s", bobData.ownedLength);
-        console2.log("Total NFT supply: %s", nftSupply);
+        console2.log("bobData.ownedLength: %s", bobData.ownedLength);
+        logOwnedIds(bobOwnedIds);
+        console2.log("dn.totalNFTSupply(): %s", nftSupply);
         console2.log("");
 
         vm.stopPrank();
@@ -74,8 +85,10 @@ contract NFTMintDN404Test is SoladyTest {
         dn.transfer(bob, 9 * _WAD);
 
         bobData = dn.addressData(bob);
-        console2.log("Bob's ownedLength: %s", bobData.ownedLength);
-        console2.log("Total NFT supply: %s", nftSupply);
+        bobOwnedIds = dn.ownedIds(bob, 0, bobData.ownedLength);
+        console2.log("bobData.ownedLength: %s", bobData.ownedLength);
+        logOwnedIds(bobOwnedIds);
+        console2.log("dn.totalNFTSupply(): %s", nftSupply);
         console2.log("");
 
         vm.stopPrank();
@@ -85,13 +98,20 @@ contract NFTMintDN404Test is SoladyTest {
         console2.log("");
         dn.setSkipNFT(false);
         console2.log("Bob mints another 3 NFTs");
+        console2.log("");
         dn.mint{value: 3 * publicPrice}(3);
         assertEq(dn.totalSupply(), 1013 * _WAD);
         assertEq(dn.balanceOf(bob), 13 * _WAD);
 
         bobData = dn.addressData(bob);
-        console2.log("ownedLength: %s", bobData.ownedLength);
-        console2.log("Total NFT supply: %s", nftSupply);
+        bobOwnedIds = dn.ownedIds(bob, 0, bobData.ownedLength);
+        console2.log("Bob's owned length should be 4 BUT ...");
+        console2.log("bobData.ownedLength: %s", bobData.ownedLength);
+        console2.log("");
+        console2.log("`dn.ownedId[4+]` should panic but instead we have ...");
+        logOwnedIds(bobOwnedIds);
+        console2.log("");
+        console2.log("dn.totalNFTSupply(): %s", nftSupply);
 
         vm.stopPrank();
     }
