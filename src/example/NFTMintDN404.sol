@@ -195,4 +195,13 @@ contract NFTMintDN404 is DN404, Ownable {
         _transfer(msg.sender, to, amount);
         return true;
     }
+
+    /// @dev Returns the total NFT supply.
+    function totalNFTSupply() public view virtual returns (uint256) {
+        return _getDN404Storage().totalNFTSupply;
+    }
+
+    function mirrorERC721() public view override returns (address) {
+        return _getDN404Storage().mirrorERC721;
+    }
 }
