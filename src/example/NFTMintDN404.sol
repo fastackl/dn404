@@ -201,7 +201,11 @@ contract NFTMintDN404 is DN404, Ownable {
         return _getDN404Storage().totalNFTSupply;
     }
 
-    function mirrorERC721() public view override returns (address) {
-        return _getDN404Storage().mirrorERC721;
+    function ownedIds(
+        address owner,
+        uint256 begin,
+        uint256 end
+    ) public view virtual returns (uint256[] memory ids) {
+        return _ownedIds(owner, begin, end);
     }
 }

@@ -10,7 +10,6 @@ contract NFTMintDN404Test is SoladyTest {
     uint256 internal constant _WAD = 10 ** 18;
 
     NFTMintDN404 dn;
-    DN404Mirror dnMirror;
 
     address alice = address(111);
     address bob = address(222);
