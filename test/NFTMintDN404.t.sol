@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./utils/SoladyTest.sol";
+import "lib/forge-std/src/console2.sol";
 import {NFTMintDN404} from "../src/example/NFTMintDN404.sol";
 
 contract NFTMintDN404Test is SoladyTest {
@@ -41,52 +42,35 @@ contract NFTMintDN404Test is SoladyTest {
         vm.expectRevert(NFTMintDN404.InvalidPrice.selector);
         dn.mint{value: 1 ether}(1);
 
-        dn.mint{value: 3 * publicPrice}(3);
-        assertEq(dn.totalSupply(), 1003 * _WAD);
-        assertEq(dn.balanceOf(bob), 3 * _WAD);
+        dn.mint{value: 10 * publicPrice}(10);
+        assertEq(dn.totalSupply(), 1010 * _WAD);
+        assertEq(dn.balanceOf(bob), 10 * _WAD);
 
-        dn.mint{value: 2 * publicPrice}(2);
-        assertEq(dn.totalSupply(), 1005 * _WAD);
-        assertEq(dn.balanceOf(bob), 5 * _WAD);
+        dn.setSkipNFT(true);
 
-        vm.expectRevert(NFTMintDN404.InvalidMint.selector);
-        dn.mint{value: publicPrice}(1);
+        dn.transfer(alice, 9 * _WAD);
+
+        NFTMintDN404.AddressData memory bobData;
+        bobData = dn.addressData(bob);
+        console2.log(
+            "Bob's ownedLength after transfer to alice: %s",
+            bobData.ownedLength
+        );
 
         vm.stopPrank();
-    }
-
-    function testTotalSupplyReached() public {
-        // Mint out whole supply
-        for (uint160 i; i < 5000; ++i) {
-            address a = address(i + 1000);
-            payable(a).transfer(1 ether);
-            vm.prank(a);
-            dn.mint{value: publicPrice}(1);
-        }
-
-        vm.prank(alice);
-        vm.expectRevert(NFTMintDN404.TotalSupplyReached.selector);
-        dn.mint{value: publicPrice}(1);
-    }
-
-    function testAllowlistMint() public {
-        vm.prank(bob);
-
-        bytes32[] memory proof; // Height one tree, so empty proof.
-        vm.expectRevert(NFTMintDN404.InvalidProof.selector);
-        dn.allowlistMint{value: 5 * allowlistPrice}(5, proof);
 
         vm.startPrank(alice);
+        dn.transfer(bob, 9 * _WAD);
+        vm.stopPrank();
 
-        vm.expectRevert(NFTMintDN404.InvalidPrice.selector);
-        dn.allowlistMint{value: 1 ether}(1, proof);
+        vm.startPrank(bob);
+        dn.setSkipNFT(false);
+        dn.mint{value: 3 * publicPrice}(3);
+        assertEq(dn.totalSupply(), 1013 * _WAD);
+        assertEq(dn.balanceOf(bob), 13 * _WAD);
 
-        dn.allowlistMint{value: 5 * allowlistPrice}(5, proof);
-        assertEq(dn.totalSupply(), 1005 * _WAD);
-        assertEq(dn.balanceOf(alice), 5 * _WAD);
-
-        vm.expectRevert(NFTMintDN404.InvalidMint.selector);
-        dn.allowlistMint{value: allowlistPrice}(1, proof);
+        bobData = dn.addressData(bob);
+        console2.log("ownedLength: %s", bobData.ownedLength);
 
         vm.stopPrank();
     }

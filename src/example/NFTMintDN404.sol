@@ -24,7 +24,7 @@ contract NFTMintDN404 is DN404, Ownable {
     uint32 public totalMinted; // DN404 only supports up to `2**32 - 2` tokens.
     bool public live;
 
-    uint32 public constant MAX_PER_WALLET = 5;
+    uint32 public constant MAX_PER_WALLET = 13;
     uint32 public constant MAX_SUPPLY = 5000;
 
     error InvalidProof();
@@ -87,7 +87,9 @@ contract NFTMintDN404 is DN404, Ownable {
         _;
     }
 
-    function mint(uint256 nftAmount)
+    function mint(
+        uint256 nftAmount
+    )
         public
         payable
         onlyLive
@@ -98,7 +100,10 @@ contract NFTMintDN404 is DN404, Ownable {
         _mint(msg.sender, nftAmount * _unit());
     }
 
-    function allowlistMint(uint256 nftAmount, bytes32[] calldata proof)
+    function allowlistMint(
+        uint256 nftAmount,
+        bytes32[] calldata proof
+    )
         public
         payable
         onlyLive
@@ -117,7 +122,10 @@ contract NFTMintDN404 is DN404, Ownable {
         _baseURI = baseURI_;
     }
 
-    function setPrices(uint96 publicPrice_, uint96 allowlistPrice_) public onlyOwner {
+    function setPrices(
+        uint96 publicPrice_,
+        uint96 allowlistPrice_
+    ) public onlyOwner {
         publicPrice = publicPrice_;
         allowlistPrice = allowlistPrice_;
     }
@@ -138,9 +146,53 @@ contract NFTMintDN404 is DN404, Ownable {
         return _symbol;
     }
 
-    function _tokenURI(uint256 tokenId) internal view override returns (string memory result) {
+    function _tokenURI(
+        uint256 tokenId
+    ) internal view override returns (string memory result) {
         if (bytes(_baseURI).length != 0) {
-            result = string(abi.encodePacked(_baseURI, LibString.toString(tokenId)));
+            result = string(
+                abi.encodePacked(_baseURI, LibString.toString(tokenId))
+            );
         }
+    }
+
+    /// @dev Returns if `a` has bytecode of non-zero length.
+    function hasCode_(address a) private view returns (bool result) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            result := extcodesize(a) // Can handle dirty upper bits.
+        }
+    }
+
+    /// @dev Returns a storage data pointer for account `owner` AddressData
+    ///
+    /// Initializes account `owner` AddressData if it is not currently initialized.
+    function addressData(
+        address owner
+    ) public virtual returns (AddressData memory d) {
+        d = _getDN404Storage().addressData[owner];
+        unchecked {
+            if (_isZero(d.flags & _ADDRESS_DATA_INITIALIZED_FLAG)) {
+                uint256 skipNFT = _toUint(hasCode_(owner)) *
+                    _ADDRESS_DATA_SKIP_NFT_FLAG;
+                d.flags = uint8(skipNFT | _ADDRESS_DATA_INITIALIZED_FLAG);
+            }
+        }
+    }
+
+    /// @dev Sets the caller's skipNFT flag to `skipNFT`. Returns true.
+    ///
+    /// Emits a {SkipNFTSet} event.
+    function setSkipNFT(bool skipNFT) public virtual override returns (bool) {
+        _setSkipNFT(msg.sender, skipNFT);
+        return true;
+    }
+
+    function transfer(
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        _transfer(msg.sender, to, amount);
+        return true;
     }
 }
